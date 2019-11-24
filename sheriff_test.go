@@ -764,3 +764,49 @@ func TestNilMapAlias(t *testing.T) {
 
 	assert.Equal(t, string(expected), string(actual))
 }
+
+type ArrayAliasContainer struct {
+	Foo ArrayAlias `json:"foo"`
+}
+
+type ArrayAlias []int
+
+func TestEmptyArrayAlias(t *testing.T) {
+	v := ArrayAliasContainer{
+		Foo: ArrayAlias{},
+	}
+	o := &Options{}
+
+	actualMap, err := Marshal(o, v)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"foo": ArrayAlias{},
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}
+
+func TestNilArrayAlias(t *testing.T) {
+	v := ArrayAliasContainer{
+		Foo: nil,
+	}
+	o := &Options{}
+
+	actualMap, err := Marshal(o, v)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"foo": nil,
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}

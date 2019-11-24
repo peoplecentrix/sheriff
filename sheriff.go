@@ -206,6 +206,9 @@ func marshalValue(options *Options, v reflect.Value) (interface{}, error) {
 		return Marshal(options, val)
 	}
 	if k == reflect.Slice {
+		if v.IsNil() {
+			return nil, nil
+		}
 		l := v.Len()
 		dest := make([]interface{}, l)
 		for i := 0; i < l; i++ {
