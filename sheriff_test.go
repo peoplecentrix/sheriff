@@ -718,3 +718,95 @@ func TestAnonymousWithNoGroups(t *testing.T) {
 
 	assert.Equal(t, string(expected), string(actual))
 }
+
+type MapAliasContainer struct {
+	Foo MapAlias `json:"foo"`
+}
+
+type MapAlias map[string]bool
+
+func TestEmptyMapAlias(t *testing.T) {
+	v := MapAliasContainer{
+		Foo: MapAlias{},
+	}
+	o := &Options{}
+
+	actualMap, err := Marshal(o, v)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"foo": MapAlias{},
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}
+
+func TestNilMapAlias(t *testing.T) {
+	v := MapAliasContainer{
+		Foo: nil,
+	}
+	o := &Options{}
+
+	actualMap, err := Marshal(o, v)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"foo": nil,
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}
+
+type ArrayAliasContainer struct {
+	Foo ArrayAlias `json:"foo"`
+}
+
+type ArrayAlias []int
+
+func TestEmptyArrayAlias(t *testing.T) {
+	v := ArrayAliasContainer{
+		Foo: ArrayAlias{},
+	}
+	o := &Options{}
+
+	actualMap, err := Marshal(o, v)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"foo": ArrayAlias{},
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}
+
+func TestNilArrayAlias(t *testing.T) {
+	v := ArrayAliasContainer{
+		Foo: nil,
+	}
+	o := &Options{}
+
+	actualMap, err := Marshal(o, v)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"foo": nil,
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}
