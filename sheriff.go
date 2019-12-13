@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	version "github.com/hashicorp/go-version"
@@ -234,20 +235,43 @@ func marshalValue(options *Options, v reflect.Value) (interface{}, error) {
 			dest := make(map[string]interface{})
 			return dest, nil
 		}
-		if mapKeys[0].Kind() != reflect.String {
-			return nil, MarshalInvalidTypeError{t: mapKeys[0].Kind(), data: val}
-		}
 		dest := make(map[string]interface{})
 		for _, key := range mapKeys {
 			d, err := marshalValue(options, v.MapIndex(key))
 			if err != nil {
 				return nil, err
 			}
-			dest[key.Interface().(string)] = d
+			keyString, err := coerceMapKeyToString(key)
+			if err != nil {
+				return nil, err
+			}
+			dest[keyString] = d
 		}
 		return dest, nil
 	}
 	return val, nil
+}
+
+func coerceMapKeyToString(v reflect.Value) (string, error) {
+	// Copied from encode.go in the official json package
+
+	if v.Kind() == reflect.String {
+		return v.String(), nil
+	}
+
+	if tm, ok := v.Interface().(encoding.TextMarshaler); ok {
+		buf, err := tm.MarshalText()
+		return string(buf), err
+	}
+
+	switch v.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return strconv.FormatInt(v.Int(), 10), nil
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return strconv.FormatUint(v.Uint(), 10), nil
+	}
+
+	return "", MarshalInvalidTypeError{t: v.Kind(), data: v.Interface()}
 }
 
 // contains check if a given key is contained in a slice of strings.
