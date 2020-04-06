@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	version "github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -161,119 +160,6 @@ func TestMarshal_GroupsNoGroups(t *testing.T) {
 	expected, err := json.Marshal(map[string]interface{}{
 		"default_marshal": "DefaultMarshal",
 		"omit_empty":      "OmitEmpty",
-	})
-	assert.NoError(t, err)
-
-	assert.Equal(t, string(expected), string(actual))
-}
-
-type TestVersionsModel struct {
-	DefaultMarshal string `json:"default_marshal"`
-	NeverMarshal   string `json:"-"`
-	Until20        string `json:"until_20" until:"2"`
-	Until21        string `json:"until_21" until:"2.1"`
-	Since20        string `json:"since_20" since:"2"`
-	Since21        string `json:"since_21" since:"2.1"`
-}
-
-func TestMarshal_Versions(t *testing.T) {
-	testModel := &TestVersionsModel{
-		DefaultMarshal: "DefaultMarshal",
-		NeverMarshal:   "NeverMarshal",
-		Until20:        "Until20",
-		Until21:        "Until21",
-		Since20:        "Since20",
-		Since21:        "Since21",
-	}
-
-	v1, err := version.NewVersion("1.0.0")
-	assert.NoError(t, err)
-
-	o := &Options{
-		ApiVersion: v1,
-	}
-
-	actualMap, err := Marshal(o, testModel)
-	assert.NoError(t, err)
-
-	actual, err := json.Marshal(actualMap)
-	assert.NoError(t, err)
-
-	expected, err := json.Marshal(map[string]string{
-		"default_marshal": "DefaultMarshal",
-		"until_20":        "Until20",
-		"until_21":        "Until21",
-	})
-	assert.NoError(t, err)
-
-	assert.Equal(t, string(expected), string(actual))
-
-	// Api Version 2
-	v2, err := version.NewVersion("2.0.0")
-	assert.NoError(t, err)
-
-	o = &Options{
-		ApiVersion: v2,
-	}
-
-	actualMap, err = Marshal(o, testModel)
-	assert.NoError(t, err)
-
-	actual, err = json.Marshal(actualMap)
-	assert.NoError(t, err)
-
-	expected, err = json.Marshal(map[string]string{
-		"default_marshal": "DefaultMarshal",
-		"until_20":        "Until20",
-		"until_21":        "Until21",
-		"since_20":        "Since20",
-	})
-	assert.NoError(t, err)
-
-	assert.Equal(t, string(expected), string(actual))
-
-	// Api Version 2.1
-	v21, err := version.NewVersion("2.1.0")
-	assert.NoError(t, err)
-
-	o = &Options{
-		ApiVersion: v21,
-	}
-
-	actualMap, err = Marshal(o, testModel)
-	assert.NoError(t, err)
-
-	actual, err = json.Marshal(actualMap)
-	assert.NoError(t, err)
-
-	expected, err = json.Marshal(map[string]string{
-		"default_marshal": "DefaultMarshal",
-		"until_21":        "Until21",
-		"since_20":        "Since20",
-		"since_21":        "Since21",
-	})
-	assert.NoError(t, err)
-
-	assert.Equal(t, string(expected), string(actual))
-
-	// Api Version 3.0
-	v3, err := version.NewVersion("3.0.0")
-	assert.NoError(t, err)
-
-	o = &Options{
-		ApiVersion: v3,
-	}
-
-	actualMap, err = Marshal(o, testModel)
-	assert.NoError(t, err)
-
-	actual, err = json.Marshal(actualMap)
-	assert.NoError(t, err)
-
-	expected, err = json.Marshal(map[string]string{
-		"default_marshal": "DefaultMarshal",
-		"since_20":        "Since20",
-		"since_21":        "Since21",
 	})
 	assert.NoError(t, err)
 

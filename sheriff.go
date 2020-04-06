@@ -7,9 +7,25 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-
-	version "github.com/hashicorp/go-version"
 )
+
+var tagName = "groups"
+
+// JSON marshals the object based on groups and wrap with root if specified
+func JSON(data interface{}, root string, groups string) interface{} {
+	intermediate, err := Marshal(&Options{Groups: strings.Split(groups, ",")}, data)
+	if err != nil {
+		panic(err)
+	}
+
+	if root == "" {
+		return intermediate
+	}
+
+	return map[string]interface{}{
+		root: intermediate,
+	}
+}
 
 // Options determine which struct fields are being added to the output map.
 type Options struct {
@@ -17,13 +33,6 @@ type Options struct {
 	// A field with multiple groups (comma-separated) will result in marshalling of that
 	// field if one of their groups is specified.
 	Groups []string
-	// ApiVersion sets the API version to use when marshalling.
-	// The tags `since` and `until` use the API version setting.
-	// Specifying the API version as "1.0.0" and having an until setting of "2"
-	// will result in the field being marshalled.
-	// Specifying a since setting of "2" with the same API version specified,
-	// will not marshal the field.
-	ApiVersion *version.Version
 
 	// This is used internally so that we can propagate anonymous fields groups tag to all child field.
 	nestedGroupsMap map[string][]string
@@ -115,7 +124,7 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 
 		if isEmbeddedField && field.Type.Kind() == reflect.Struct {
 			tt := field.Type
-			groups := field.Tag.Get("groups")
+			groups := field.Tag.Get(tagName)
 			if groups != "" {
 				parentGroups := strings.Split(groups, ",")
 				for i := 0; i < tt.NumField(); i++ {
@@ -127,8 +136,8 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 
 		if !isEmbeddedField {
 			var groups []string
-			if field.Tag.Get("groups") != "" {
-				groups = strings.Split(field.Tag.Get("groups"), ",")
+			if field.Tag.Get(tagName) != "" {
+				groups = strings.Split(field.Tag.Get(tagName), ",")
 			}
 
 			if len(groups) == 0 && options.nestedGroupsMap[field.Name] != nil {
@@ -137,26 +146,6 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 			shouldShow := len(groups) == 0 || listContains(groups, options.Groups)
 			if !shouldShow {
 				continue
-			}
-
-			if since := field.Tag.Get("since"); since != "" {
-				sinceVersion, err := version.NewVersion(since)
-				if err != nil {
-					return nil, err
-				}
-				if options.ApiVersion.LessThan(sinceVersion) {
-					continue
-				}
-			}
-
-			if until := field.Tag.Get("until"); until != "" {
-				untilVersion, err := version.NewVersion(until)
-				if err != nil {
-					return nil, err
-				}
-				if options.ApiVersion.GreaterThan(untilVersion) {
-					continue
-				}
 			}
 		}
 
